@@ -5,7 +5,7 @@
   "scripts": {
     "build:transfers": "esbuild TransfersEntry.jsx --bundle --format=iife --outfile=public/transfers-view.js",
     "verify:transfer-notifications": "node scripts/verify-transfer-notifications.cjs",
-    "start": "pnpm run build:transfers && node index.js"
+    "start": "npm run build:transfers && node index.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
