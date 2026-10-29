@@ -287,6 +287,52 @@ pool.connect((err, client, release) => {
         release();
     }
 });
+pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255),
+        username VARCHAR(255) UNIQUE,
+        email VARCHAR(255) UNIQUE,
+        password VARCHAR(255),
+        pin VARCHAR(10),
+        totp_secret TEXT,
+        totp_pending_secret TEXT,
+        totp_enabled BOOLEAN DEFAULT FALSE,
+        totp_last_counter BIGINT DEFAULT -1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS accounts (
+        id SERIAL PRIMARY KEY,
+        user_id INT REFERENCES users(id) ON DELETE CASCADE,
+        balance_yer NUMERIC(15, 2) DEFAULT 0,
+        balance_sar NUMERIC(15, 2) DEFAULT 0,
+        balance_usd NUMERIC(15, 2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS app_sessions (
+        token_id VARCHAR(255) PRIMARY KEY,
+        user_id INT REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        expires_at TIMESTAMP NOT NULL,
+        revoked_at TIMESTAMP,
+        ip_address VARCHAR(45),
+        user_agent TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS security_events (
+        id SERIAL PRIMARY KEY,
+        user_id INT REFERENCES users(id) ON DELETE CASCADE,
+        event_type VARCHAR(100) NOT NULL,
+        detail TEXT,
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+`).then(() => console.log('✅ تم إنشاء الجداول بنجاح'))
+  .catch(err => console.error('❌ خطأ في إنشاء الجداول:', err.message));
 
 // 2. الوسائط (Middleware)
 app.use(express.json());
